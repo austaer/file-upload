@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use Libraries\MediaConvert\Facades\Convertor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -16,7 +17,7 @@ class FileController extends Controller
      */
     public function index()
     {
-        
+        phpinfo();   
     }
 
     /**
@@ -25,18 +26,33 @@ class FileController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, $object_name = '')
     {
+        $media = $request->getContent();
+        if (!$media) {
+            return response(null, 400);
+        }
+        
         $file = new File();
         $file->dic_name = '';
-        $file->name = '';
-        $file->file_name = '';
+        $file->name = $object_name;
+        $file->file_name = Str::random(32);
+        $file->dic_name = storage_path('public/uploads');
+        $file->received_status = 'y';
         $file->upload_id = Str::random(32);
         $file->total_size = 0;
-        $file->save();
 
+        if (Storage::put('public/uploads/' . $file->file_name, $media) === false) {
+            return response()->json([
+                "error" => "File store failed!",
+            ], 500);
+        }
+
+        $file->total_size = filesize(Storage::path('public/uploads/' .  $file->file_name));
+        $file->save();
         return response()->json([
-            "upload_id" => $file->upload_id
+            'id' => $file->id,
+            'url' => url("api/files/$file->file_name"),
         ], 200);
     }
 
@@ -46,9 +62,21 @@ class FileController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($file_name)
     {
         //
+        $file = File::where('file_name', $file_name)->first();
+        if (!$file) {
+            return response(null, 404);
+        }
+        $localFile = Storage::path('public/uploads/' .  $file->file_name);
+        return response('', 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Content-type' => mime_content_type($localFile),
+            'Content-Length' => $file->total_size,
+            'X-Sendfile' => $localFile,
+        ]);
     }
 
     /**
@@ -58,26 +86,9 @@ class FileController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $upload_id)
+    public function update(Request $request)
     {   
-        $media = $request->getContent();
-        if (!$media) {
-            return response(null, 400);
-        }
-        
-        $file = File::where('upload_id', $upload_id)->first();
-        $file->file_name = Str::random(32);
-        $file->dic_name = storage_path('uploads');
-        $file->received_status = 'y';
-
-        if (Storage::put('public/uploads/' . $file->file_name, $media) === false) {
-            return response()->json([
-                "error" => "File store failed!",
-            ], 500);
-        }
-        $file->save();
-        return response()->json($file, 200);
-
+   
     }
 
     /**
