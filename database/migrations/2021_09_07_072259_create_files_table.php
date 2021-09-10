@@ -17,7 +17,6 @@ class CreateFilesTable extends Migration
         Schema::create('files', function (Blueprint $table) {
             $table->id();
             $table->string('name', 50)->default('');
-            $table->string('upload_id', 200)->unique();
             $table->string('dic_name', 200)->default('');
             $table->string('file_name', 200)->default('');
             $table->float('total_size')->default(0);

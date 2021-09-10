@@ -26,7 +26,7 @@ class FileController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request, $object_name = '')
+    public function store(Request $request)
     {
         $media = $request->getContent();
         if (!$media) {
@@ -35,11 +35,9 @@ class FileController extends Controller
         
         $file = new File();
         $file->dic_name = '';
-        $file->name = $object_name;
         $file->file_name = Str::random(32);
-        $file->dic_name = storage_path('public/uploads');
+        $file->dic_name = Storage::path('public/uploads');
         $file->received_status = 'y';
-        $file->upload_id = Str::random(32);
         $file->total_size = 0;
 
         if (Storage::put('public/uploads/' . $file->file_name, $media) === false) {

@@ -20,7 +20,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('files/{object_name}', [FileController::class, 'store'])->where('object_name', '[^?!\s].{0,}');
-Route::resource('files', FileController::class)->except('store');
+// Route::post('files/{object_name}', [FileController::class, 'store'])->where('object_name', '[^?!\s].{0,}');
+Route::resource('files', FileController::class);
 Route::apiResource('files.metadata', MetadataController::class);
 
